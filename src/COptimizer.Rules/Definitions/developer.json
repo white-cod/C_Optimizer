@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "dev.npm.cache",
+      "name": "npm cache",
+      "description": "Downloaded npm packages. Projects keep working; the next install downloads packages again.",
+      "category": "Developer",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "targets": [ { "path": "%LOCALAPPDATA%\\npm-cache" } ]
+    },
+    {
+      "id": "dev.yarn.cache",
+      "name": "Yarn cache",
+      "description": "Downloaded Yarn packages. The next install downloads packages again.",
+      "category": "Developer",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "targets": [ { "path": "%LOCALAPPDATA%\\Yarn\\Cache" } ]
+    },
+    {
+      "id": "dev.pip.cache",
+      "name": "pip cache",
+      "description": "Downloaded Python packages and built wheels. The next install downloads them again.",
+      "category": "Developer",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "targets": [ { "path": "%LOCALAPPDATA%\\pip\\cache" } ]
+    },
+    {
+      "id": "dev.nuget.http-cache",
+      "name": "NuGet HTTP cache",
+      "description": "Cached NuGet feed responses and package downloads. Restored projects are not affected.",
+      "category": "Developer",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\NuGet\\v3-cache" },
+        { "path": "%LOCALAPPDATA%\\NuGet\\plugins-cache" }
+      ]
+    },
+    {
+      "id": "dev.nuget.packages",
+      "name": "NuGet global packages",
+      "description": "Extracted NuGet packages used by .NET builds. The next build restores them from the internet.",
+      "category": "Developer",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "closeProcesses": [ "devenv", "dotnet", "MSBuild" ],
+      "targets": [ { "path": "%USERPROFILE%\\.nuget\\packages" } ]
+    },
+    {
+      "id": "dev.gradle.cache",
+      "name": "Gradle caches",
+      "description": "Downloaded dependencies and build caches of Gradle. The next build downloads them again.",
+      "category": "Developer",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "closeProcesses": [ "java", "studio64" ],
+      "targets": [ { "path": "%USERPROFILE%\\.gradle\\caches" } ]
+    },
+    {
+      "id": "dev.maven.repository",
+      "name": "Maven local repository",
+      "description": "Downloaded Maven artifacts. The next build downloads them again.",
+      "category": "Developer",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "targets": [ { "path": "%USERPROFILE%\\.m2\\repository" } ]
+    },
+    {
+      "id": "dev.cargo.cache",
+      "name": "Cargo registry cache",
+      "description": "Downloaded Rust crate archives. The next build downloads them again.",
+      "category": "Developer",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "targets": [ { "path": "%USERPROFILE%\\.cargo\\registry\\cache" } ]
+    },
+    {
+      "id": "dev.go.build-cache",
+      "name": "Go build cache",
+      "description": "Compiled Go packages. Rebuilt automatically on the next build.",
+      "category": "Developer",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [ { "path": "%LOCALAPPDATA%\\go-build" } ]
+    }
+  ]
+}

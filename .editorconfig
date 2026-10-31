@@ -1,0 +1,17 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+
+[*.cs]
+indent_size = 4
+
+[*.{json,csproj,props,xml,manifest,slnx}]
+indent_size = 2
+
+# Test method names use underscores for readability.
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none

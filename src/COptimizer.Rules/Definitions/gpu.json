@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "gpu.nvidia.shader-cache",
+      "name": "NVIDIA shader cache",
+      "description": "Compiled DirectX/OpenGL shaders. Rebuilt automatically; the first launch of each game may stutter briefly.",
+      "category": "Gpu",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\NVIDIA\\DXCache" },
+        { "path": "%LOCALAPPDATA%\\NVIDIA\\GLCache" },
+        { "path": "%USERPROFILE%\\AppData\\LocalLow\\NVIDIA\\PerDriverVersion\\DXCache" },
+        { "path": "%USERPROFILE%\\AppData\\LocalLow\\NVIDIA\\PerDriverVersion\\GLCache" }
+      ]
+    },
+    {
+      "id": "gpu.nvidia.compute-cache",
+      "name": "NVIDIA system shader cache",
+      "description": "Machine-wide NVIDIA shader/compute cache. Rebuilt automatically.",
+      "category": "Gpu",
+      "risk": "Safe",
+      "targets": [ { "path": "%PROGRAMDATA%\\NVIDIA Corporation\\NV_Cache" } ]
+    },
+    {
+      "id": "gpu.nvidia.installer-leftovers",
+      "name": "NVIDIA driver installer files",
+      "description": "Unpacked driver installers left on the system drive after a driver update.",
+      "category": "Gpu",
+      "risk": "Safe",
+      "targets": [ { "path": "%SYSTEMDRIVE%\\NVIDIA" } ]
+    },
+    {
+      "id": "gpu.nvidia.downloaded-drivers",
+      "name": "NVIDIA downloaded driver packages",
+      "description": "Driver packages downloaded by GeForce Experience / NVIDIA App. Reinstalling the same driver will require a new download.",
+      "category": "Gpu",
+      "risk": "Moderate",
+      "targets": [ { "path": "%PROGRAMDATA%\\NVIDIA Corporation\\Downloader" } ]
+    },
+    {
+      "id": "gpu.amd.shader-cache",
+      "name": "AMD shader cache",
+      "description": "Compiled DirectX/OpenGL/Vulkan shaders. Rebuilt automatically; the first launch of each game may stutter briefly.",
+      "category": "Gpu",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\AMD\\DxCache" },
+        { "path": "%LOCALAPPDATA%\\AMD\\DxcCache" },
+        { "path": "%LOCALAPPDATA%\\AMD\\DX9Cache" },
+        { "path": "%LOCALAPPDATA%\\AMD\\GLCache" },
+        { "path": "%LOCALAPPDATA%\\AMD\\VkCache" }
+      ]
+    },
+    {
+      "id": "gpu.amd.installer-leftovers",
+      "name": "AMD driver installer files",
+      "description": "Unpacked driver installers left on the system drive after a driver update.",
+      "category": "Gpu",
+      "risk": "Safe",
+      "targets": [ { "path": "%SYSTEMDRIVE%\\AMD" } ]
+    },
+    {
+      "id": "gpu.intel.shader-cache",
+      "name": "Intel shader cache",
+      "description": "Compiled shaders of Intel graphics drivers. Rebuilt automatically.",
+      "category": "Gpu",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [ { "path": "%USERPROFILE%\\AppData\\LocalLow\\Intel\\ShaderCache" } ]
+    },
+    {
+      "id": "gpu.directx-shader-cache",
+      "name": "DirectX shader cache",
+      "description": "Windows DirectX shader cache. Rebuilt automatically.",
+      "category": "Gpu",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [ { "path": "%LOCALAPPDATA%\\D3DSCache" } ]
+    }
+  ]
+}

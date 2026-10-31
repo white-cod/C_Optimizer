@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <RootNamespace>COptimizer.Cli</RootNamespace>
+    <AssemblyName>coptimizer</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\COptimizer.Core\COptimizer.Core.csproj" />
+    <ProjectReference Include="..\COptimizer.Rules\COptimizer.Rules.csproj" />
+    <ProjectReference Include="..\COptimizer.Windows\COptimizer.Windows.csproj" />
+  </ItemGroup>
+</Project>

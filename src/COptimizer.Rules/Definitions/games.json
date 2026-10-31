@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "games.steam.web-cache",
+      "name": "Steam web cache",
+      "description": "Cached store and community pages of the Steam client.",
+      "category": "Games",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "closeProcesses": [ "steam", "steamwebhelper" ],
+      "targets": [ { "path": "%LOCALAPPDATA%\\Steam\\htmlcache" } ]
+    },
+    {
+      "id": "games.steam.logs",
+      "name": "Steam logs and crash dumps",
+      "description": "Steam client logs, crash dumps and HTTP cache.",
+      "category": "Games",
+      "risk": "Safe",
+      "closeProcesses": [ "steam" ],
+      "targets": [
+        { "path": "%PROGRAMFILES(X86)%\\Steam\\logs" },
+        { "path": "%PROGRAMFILES(X86)%\\Steam\\dumps" },
+        { "path": "%PROGRAMFILES(X86)%\\Steam\\appcache\\httpcache" }
+      ]
+    },
+    {
+      "id": "games.steam.shader-cache",
+      "name": "Steam shader pre-caches",
+      "description": "Shader caches downloaded or built by Steam for each game. Rebuilt automatically, but the first launch of a game may stutter.",
+      "category": "Games",
+      "risk": "Moderate",
+      "closeProcesses": [ "steam" ],
+      "targets": [ { "path": "%PROGRAMFILES(X86)%\\Steam\\steamapps\\shadercache" } ]
+    },
+    {
+      "id": "games.epic.cache",
+      "name": "Epic Games Launcher cache and logs",
+      "description": "Web cache and logs of the Epic Games Launcher. Installed games are not touched.",
+      "category": "Games",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "closeProcesses": [ "EpicGamesLauncher" ],
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache*" },
+        { "path": "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\Logs" }
+      ]
+    },
+    {
+      "id": "games.battlenet.cache",
+      "name": "Battle.net cache",
+      "description": "Web and agent cache of the Battle.net launcher. Installed games are not touched.",
+      "category": "Games",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "closeProcesses": [ "Battle.net" ],
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\Battle.net\\Cache" },
+        { "path": "%LOCALAPPDATA%\\Battle.net\\BrowserCache" }
+      ]
+    }
+  ]
+}

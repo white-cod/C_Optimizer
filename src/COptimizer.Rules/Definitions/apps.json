@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "app.discord.cache",
+      "name": "Discord cache",
+      "description": "Cached images, scripts and GPU data. Messages and settings are stored online and are not affected.",
+      "category": "Applications",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "closeProcesses": [ "Discord" ],
+      "targets": [
+        { "path": "%APPDATA%\\discord\\Cache" },
+        { "path": "%APPDATA%\\discord\\Code Cache" },
+        { "path": "%APPDATA%\\discord\\GPUCache" }
+      ]
+    },
+    {
+      "id": "app.slack.cache",
+      "name": "Slack cache",
+      "description": "Cached web content and GPU data of the Slack desktop app.",
+      "category": "Applications",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "closeProcesses": [ "slack" ],
+      "targets": [
+        { "path": "%APPDATA%\\Slack\\Cache" },
+        { "path": "%APPDATA%\\Slack\\Code Cache" },
+        { "path": "%APPDATA%\\Slack\\GPUCache" }
+      ]
+    },
+    {
+      "id": "app.teams-classic.cache",
+      "name": "Microsoft Teams (classic) cache",
+      "description": "Cached web content and GPU data of classic Microsoft Teams.",
+      "category": "Applications",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "closeProcesses": [ "Teams" ],
+      "targets": [
+        { "path": "%APPDATA%\\Microsoft\\Teams\\Cache" },
+        { "path": "%APPDATA%\\Microsoft\\Teams\\Code Cache" },
+        { "path": "%APPDATA%\\Microsoft\\Teams\\GPUCache" },
+        { "path": "%APPDATA%\\Microsoft\\Teams\\tmp" }
+      ]
+    },
+    {
+      "id": "app.vscode.cache",
+      "name": "Visual Studio Code cache",
+      "description": "Cached web content, compiled code and downloaded extension packages. Extensions and settings are kept.",
+      "category": "Applications",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "closeProcesses": [ "Code" ],
+      "targets": [
+        { "path": "%APPDATA%\\Code\\Cache" },
+        { "path": "%APPDATA%\\Code\\CachedData" },
+        { "path": "%APPDATA%\\Code\\Code Cache" },
+        { "path": "%APPDATA%\\Code\\GPUCache" },
+        { "path": "%APPDATA%\\Code\\CachedExtensionVSIXs" }
+      ]
+    },
+    {
+      "id": "app.spotify.cache",
+      "name": "Spotify streaming cache",
+      "description": "Cached music for faster playback. Songs downloaded for offline listening may need to be downloaded again.",
+      "category": "Applications",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "closeProcesses": [ "Spotify" ],
+      "targets": [ { "path": "%LOCALAPPDATA%\\Spotify\\Storage" } ]
+    },
+    {
+      "id": "app.telegram.media-cache",
+      "name": "Telegram Desktop media cache",
+      "description": "Cached photos, videos and files from chats. They stay available in Telegram and are downloaded again when opened.",
+      "category": "Applications",
+      "risk": "Moderate",
+      "scope": "PerUser",
+      "closeProcesses": [ "Telegram" ],
+      "targets": [ { "path": "%APPDATA%\\Telegram Desktop\\tdata\\user_data" } ]
+    }
+  ]
+}

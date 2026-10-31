@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "system.user-temp",
+      "name": "User temporary files",
+      "description": "Files that programs left in the user's Temp folder. Only files older than 24 hours are removed.",
+      "category": "System",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "minAgeHours": 24,
+      "targets": [ { "path": "%TEMP%" } ]
+    },
+    {
+      "id": "system.windows-temp",
+      "name": "Windows temporary files",
+      "description": "System-wide temporary files in the Windows Temp folder. Only files older than 24 hours are removed.",
+      "category": "System",
+      "risk": "Safe",
+      "minAgeHours": 24,
+      "targets": [
+        { "path": "%WINDIR%\\Temp" },
+        { "path": "%WINDIR%\\ServiceProfiles\\LocalService\\AppData\\Local\\Temp" },
+        { "path": "%WINDIR%\\ServiceProfiles\\NetworkService\\AppData\\Local\\Temp" }
+      ]
+    },
+    {
+      "id": "system.error-reports",
+      "name": "Windows Error Reporting files",
+      "description": "Crash and problem reports collected by Windows. They are only useful for sending to Microsoft.",
+      "category": "System",
+      "risk": "Safe",
+      "targets": [
+        { "path": "%PROGRAMDATA%\\Microsoft\\Windows\\WER\\ReportArchive" },
+        { "path": "%PROGRAMDATA%\\Microsoft\\Windows\\WER\\ReportQueue" },
+        { "path": "%PROGRAMDATA%\\Microsoft\\Windows\\WER\\Temp" }
+      ]
+    },
+    {
+      "id": "system.user-error-reports",
+      "name": "User error reports and crash dumps",
+      "description": "Per-user problem reports and application crash dumps.",
+      "category": "System",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\Microsoft\\Windows\\WER" },
+        { "path": "%LOCALAPPDATA%\\CrashDumps" }
+      ]
+    },
+    {
+      "id": "system.memory-dumps",
+      "name": "System memory dumps",
+      "description": "Dumps written after blue screens and driver failures. Only needed to diagnose old crashes.",
+      "category": "System",
+      "risk": "Safe",
+      "targets": [
+        { "path": "%WINDIR%\\Minidump", "mask": "*.dmp" },
+        { "path": "%WINDIR%\\LiveKernelReports", "mask": "*.dmp" }
+      ]
+    },
+    {
+      "id": "system.thumbnail-cache",
+      "name": "Thumbnail and icon cache",
+      "description": "Explorer rebuilds thumbnails and icons on demand. Files in use by Explorer are skipped.",
+      "category": "System",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\Microsoft\\Windows\\Explorer", "mask": "thumbcache_*.db", "recursive": false },
+        { "path": "%LOCALAPPDATA%\\Microsoft\\Windows\\Explorer", "mask": "iconcache_*.db", "recursive": false }
+      ]
+    },
+    {
+      "id": "system.internet-cache",
+      "name": "Windows internet cache",
+      "description": "Web cache used by Windows components and legacy apps.",
+      "category": "System",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [ { "path": "%LOCALAPPDATA%\\Microsoft\\Windows\\INetCache" } ]
+    },
+    {
+      "id": "system.store-app-temp",
+      "name": "Store app temporary files",
+      "description": "Web cache and temporary files of Microsoft Store apps. App data and settings are not touched.",
+      "category": "System",
+      "risk": "Safe",
+      "scope": "PerUser",
+      "targets": [
+        { "path": "%LOCALAPPDATA%\\Packages\\*\\AC\\INetCache" },
+        { "path": "%LOCALAPPDATA%\\Packages\\*\\AC\\Temp" },
+        { "path": "%LOCALAPPDATA%\\Packages\\*\\TempState" }
+      ]
+    },
+    {
+      "id": "system.windows-logs",
+      "name": "Old Windows log files",
+      "description": "Setup, servicing and diagnostic logs older than 7 days.",
+      "category": "System",
+      "risk": "Safe",
+      "minAgeHours": 168,
+      "targets": [
+        { "path": "%WINDIR%\\Logs" },
+        { "path": "%WINDIR%\\System32\\LogFiles\\WMI\\RtBackup" },
+        { "path": "%WINDIR%\\SoftwareDistribution\\DataStore\\Logs" }
+      ]
+    }
+  ]
+}
