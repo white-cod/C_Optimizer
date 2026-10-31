@@ -10,6 +10,7 @@ namespace COptimizer.Windows.VolumeCaches;
 /// </summary>
 public static class VolumeCacheCatalog
 {
+    // IsSlow: measured at several seconds or more; scanned in the background so the list appears immediately.
     private sealed record Entry(string KeyName, CleanerInfo Info, bool IsSlow = false);
 
     private static readonly Entry[] Entries =
@@ -101,7 +102,7 @@ public static class VolumeCacheCatalog
             Description = "Previous versions of installed drivers. Rolling a driver back to an older version will no longer be possible.",
             Category = CleanerCategory.Gpu,
             Risk = RiskLevel.Moderate,
-        }),
+        }, IsSlow: true),
         new("Language Pack", new CleanerInfo
         {
             Id = "windows.unused-language-resources",
@@ -109,7 +110,7 @@ public static class VolumeCacheCatalog
             Description = "Language packs and features that are not used. They are downloaded again if you add the language later.",
             Category = CleanerCategory.System,
             Risk = RiskLevel.Moderate,
-        }),
+        }, IsSlow: true),
         new("Windows Defender", new CleanerInfo
         {
             Id = "windows.defender-temp",
