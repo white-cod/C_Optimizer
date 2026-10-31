@@ -5,5 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="COptimizer.Core.Tests" />
+    <InternalsVisibleTo Include="COptimizer.App.Tests" />
   </ItemGroup>
 </Project>

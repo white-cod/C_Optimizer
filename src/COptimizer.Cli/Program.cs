@@ -2,6 +2,7 @@
 using COptimizer.Core.Cleaning;
 using COptimizer.Core.Model;
 using COptimizer.Core.Scanning;
+using COptimizer.Core.SystemCleaners;
 using COptimizer.Rules;
 using COptimizer.Windows;
 
@@ -14,6 +15,8 @@ internal static class Program
           coptimizer rules                                   List built-in rules
           coptimizer scan  [--level safe|moderate|expert] [--rule <id>]... [--verbose]
           coptimizer clean [--level safe|moderate|expert] [--rule <id>]... (--dry-run | --yes)
+          coptimizer system                                  Scan system cleaners (Windows.old, component store, ...)
+          coptimizer system --rule <id> --yes                Run the given system cleaner(s)
 
         --level   Include rules up to this risk level (default: safe).
         --rule    Only the given rule(s); overrides --level.
@@ -37,6 +40,7 @@ internal static class Program
                 "rules" => ListRules(),
                 "scan" => await ScanAsync(options).ConfigureAwait(false),
                 "clean" => await CleanAsync(options).ConfigureAwait(false),
+                "system" => await SystemAsync(options).ConfigureAwait(false),
                 _ => Fail($"Unknown command '{args[0]}'."),
             };
         }
@@ -75,7 +79,7 @@ internal static class Program
         var plan = results.Where(r => r.FileCount > 0).ToArray();
         PrintScan(plan, verbose: false);
 
-        var engine = new CleanEngine(context, new ShellRecycleBin());
+        var engine = new CleanEngine(context, new ShellRecycleBin(), services: new WindowsServiceManager());
         var report = await engine.CleanAsync(plan, new CleanOptions { DryRun = options.DryRun }).ConfigureAwait(false);
 
         Console.WriteLine();
@@ -92,6 +96,51 @@ internal static class Program
         return 0;
     }
 
+    private static async Task<int> SystemAsync(CliOptions options)
+    {
+        var context = CreateContext();
+        var cleaners = WindowsSystemCleaners.Create(context.System.SystemDrive);
+        var isAdmin = Elevation.IsAdministrator();
+        if (!isAdmin)
+            Console.WriteLine("Note: not running as administrator — Windows cleanup handlers are skipped.");
+
+        if (options.RuleIds.Count > 0)
+        {
+            if (!options.Yes)
+                return Fail("Pass --yes to run system cleaners.");
+
+            foreach (var id in options.RuleIds)
+            {
+                var cleaner = cleaners.FirstOrDefault(c => c.Info.Id.Equals(id, StringComparison.OrdinalIgnoreCase))
+                    ?? throw new ArgumentException($"Unknown system cleaner '{id}'.");
+                var progress = new Progress<SystemCleanProgress>(p =>
+                    Console.Write($"\r  {cleaner.Info.Name}: {Format(p.FreedBytes)} of {Format(p.TotalBytes)}   "));
+                var result = await cleaner.CleanAsync(progress, CancellationToken.None).ConfigureAwait(false);
+                Console.WriteLine();
+                Console.WriteLine(result.Succeeded
+                    ? $"  {cleaner.Info.Name}: freed {Format(result.FreedBytes)}"
+                    : $"  {cleaner.Info.Name}: {result.Error}");
+            }
+
+            return 0;
+        }
+
+        foreach (var cleaner in cleaners)
+        {
+            if (cleaner.RequiresAdministrator && !isAdmin)
+                continue;
+
+            var started = System.Diagnostics.Stopwatch.StartNew();
+            var result = await cleaner.ScanAsync(CancellationToken.None).ConfigureAwait(false);
+            var state = result.IsApplicable ? Format(result.Bytes) : "—";
+            Console.WriteLine($"{cleaner.Info.Id,-38} {state,10}  {cleaner.Info.Risk,-9} {started.Elapsed.TotalSeconds,6:0.0}s  {cleaner.Info.Name}");
+            foreach (var w in result.Warnings)
+                Console.WriteLine($"    ! {w}");
+        }
+
+        return 0;
+    }
+
     private static CleanupContext CreateContext() =>
         CleanupContext.Create(new WindowsSystemPathsProvider(), new RegistryProfileProvider());
 
@@ -102,7 +151,7 @@ internal static class Program
             Console.WriteLine("Note: not running as administrator — other users' profiles and some system folders are skipped.");
 
         var rules = SelectRules(options);
-        var scanner = new Scanner(context);
+        var scanner = new Scanner(context, systemState: new WindowsSystemState());
         return await scanner.ScanAsync(rules).ConfigureAwait(false);
     }
 
@@ -139,19 +188,7 @@ internal static class Program
                           (warnings > 0 && !verbose ? $" ({warnings} warnings, use --verbose)" : string.Empty));
     }
 
-    private static string Format(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        double value = bytes;
-        var unit = 0;
-        while (value >= 1024 && unit < units.Length - 1)
-        {
-            value /= 1024;
-            unit++;
-        }
-
-        return $"{value:0.#} {units[unit]}";
-    }
+    private static string Format(long bytes) => ByteSize.Format(bytes);
 
     private static int Fail(string message)
     {

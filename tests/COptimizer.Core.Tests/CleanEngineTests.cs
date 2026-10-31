@@ -150,6 +150,34 @@ public sealed class CleanEngineTests : IDisposable
         Assert.Equal(SkipReason.Missing, Assert.Single(report.Rules[0].Skipped).Reason);
     }
 
+    [Fact]
+    public void Log_receives_every_decision_except_in_dry_run()
+    {
+        _m.File(@"Users\alice\AppData\Local\App\Cache\a.bin", 10);
+        var locked = _m.File(@"Users\alice\AppData\Local\App\Cache\locked.bin", 20);
+        var log = new RecordingLog();
+
+        new CleanEngine(_m.Context, null).Clean([Scan(CacheRule())], new CleanOptions { DryRun = true }, log: log);
+        Assert.Empty(log.Lines);
+
+        var plan = Scan(CacheRule());
+        using (new FileStream(locked, FileMode.Open, FileAccess.Read, FileShare.None))
+            new CleanEngine(_m.Context, null).Clean([plan], new CleanOptions(), log: log);
+
+        Assert.Equal(2, log.Lines.Count);
+        Assert.Contains(log.Lines, l => l.StartsWith("removed", StringComparison.Ordinal) && l.EndsWith("a.bin", StringComparison.Ordinal));
+        Assert.Contains(log.Lines, l => l.StartsWith("skipped", StringComparison.Ordinal) && l.EndsWith("locked.bin", StringComparison.Ordinal));
+    }
+
+    private sealed class RecordingLog : ICleanLog
+    {
+        public List<string> Lines { get; } = [];
+
+        public void Removed(string ruleId, string path, long length) => Lines.Add($"removed {path}");
+
+        public void Skipped(string ruleId, SkippedFile file) => Lines.Add($"skipped {file.Path}");
+    }
+
     private sealed class FakeRecycleBin : IRecycleBin
     {
         public bool Fail { get; init; }

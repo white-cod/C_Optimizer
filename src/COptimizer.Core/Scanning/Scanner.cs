@@ -24,12 +24,14 @@ public sealed class Scanner
     private readonly CleanupContext _context;
     private readonly IProcessInspector _processes;
     private readonly TimeProvider _time;
+    private readonly ISystemState? _systemState;
 
-    public Scanner(CleanupContext context, IProcessInspector? processes = null, TimeProvider? time = null)
+    public Scanner(CleanupContext context, IProcessInspector? processes = null, TimeProvider? time = null, ISystemState? systemState = null)
     {
         _context = context;
         _processes = processes ?? new ProcessInspector();
         _time = time ?? TimeProvider.System;
+        _systemState = systemState;
     }
 
     public async Task<IReadOnlyList<RuleScanResult>> ScanAsync(
@@ -57,6 +59,16 @@ public sealed class Scanner
 
     public RuleScanResult ScanRule(RuleDefinition rule, CancellationToken cancellationToken = default)
     {
+        if (rule.SkipWhenRebootPending && _systemState?.IsRebootPending() == true)
+        {
+            return new RuleScanResult
+            {
+                Rule = rule,
+                Targets = [],
+                Warnings = ["Windows is waiting for a restart to finish installing updates. Restart the computer, then scan again."],
+            };
+        }
+
         var warnings = new ConcurrentBag<string>();
         var targets = new List<TargetScanResult>();
         var seenRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

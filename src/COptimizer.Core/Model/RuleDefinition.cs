@@ -28,6 +28,12 @@ public sealed record RuleDefinition
 
     /// <summary>Process names (without .exe) that lock or rewrite the data; the user is asked to close them.</summary>
     public IReadOnlyList<string> CloseProcesses { get; init; } = [];
+
+    /// <summary>Windows services stopped while the rule is cleaned and started again afterwards (e.g. "wuauserv").</summary>
+    public IReadOnlyList<string> StopServices { get; init; } = [];
+
+    /// <summary>Do not touch the data while Windows waits for a restart to finish installing updates.</summary>
+    public bool SkipWhenRebootPending { get; init; }
 }
 
 /// <summary>One folder (pattern) covered by a rule.</summary>

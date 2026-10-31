@@ -43,6 +43,9 @@ public sealed class RuleCleanReport
 
     public List<SkippedFile> Skipped { get; } = [];
 
+    /// <summary>Non-file problems, e.g. a service that could not be stopped.</summary>
+    public List<string> Notes { get; } = [];
+
     public long SkippedBytes => Skipped.Where(s => s.Reason != SkipReason.Missing).Sum(s => s.Length);
 }
 

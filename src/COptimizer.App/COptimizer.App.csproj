@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>COptimizer.App</RootNamespace>
+    <AssemblyName>COptimizer</AssemblyName>
+    <AssemblyTitle>C_Optimizer</AssemblyTitle>
+    <!-- Debug runs with the caller's rights (so `dotnet run` works); Release always asks for elevation. -->
+    <ApplicationManifest Condition="'$(Configuration)' == 'Release'">app.release.manifest</ApplicationManifest>
+    <ApplicationManifest Condition="'$(Configuration)' != 'Release'">app.debug.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <!-- Portable single-file build: dotnet publish src/COptimizer.App -c Release -r win-x64 -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="WPF-UI" Version="4.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\COptimizer.Core\COptimizer.Core.csproj" />
+    <ProjectReference Include="..\COptimizer.Rules\COptimizer.Rules.csproj" />
+    <ProjectReference Include="..\COptimizer.Windows\COptimizer.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WPF projects do not include System.IO in implicit usings. -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="COptimizer.App.Tests" />
+  </ItemGroup>
+</Project>

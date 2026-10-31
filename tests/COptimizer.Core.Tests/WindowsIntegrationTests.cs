@@ -65,3 +65,34 @@ public sealed class WindowsIntegrationTests
         Assert.ThrowsAny<IOException>(() => new ShellRecycleBin().MoveToRecycleBin(path));
     }
 }
+
+public sealed class SystemCleanerCatalogTests
+{
+    [Fact]
+    public void Catalog_never_includes_handlers_that_delete_user_data()
+    {
+        var allowed = COptimizer.Windows.VolumeCaches.VolumeCacheCatalog.AllowedKeyNames.ToArray();
+
+        Assert.DoesNotContain("DownloadsFolder", allowed);
+        Assert.DoesNotContain("User file versions", allowed);
+        Assert.Empty(allowed.Intersect(COptimizer.Windows.VolumeCaches.VolumeCacheCatalog.Excluded, StringComparer.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void System_cleaners_have_unique_ids_that_do_not_clash_with_rules()
+    {
+        var cleaners = COptimizer.Windows.WindowsSystemCleaners.Create(@"C:\");
+        var ids = cleaners.Select(c => c.Info.Id).ToArray();
+
+        Assert.Contains("windows.recycle-bin", ids);
+        Assert.Equal(ids.Length, ids.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.Empty(ids.Intersect(COptimizer.Rules.BuiltInRules.All.Select(r => r.Id), StringComparer.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Recycle_bin_scan_is_read_only_and_works_without_elevation()
+    {
+        var result = await new COptimizer.Windows.RecycleBinCleaner().ScanAsync(CancellationToken.None);
+        Assert.True(result.Bytes >= 0);
+    }
+}

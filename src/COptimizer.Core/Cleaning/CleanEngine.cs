@@ -1,3 +1,4 @@
+using COptimizer.Core.Environment;
 using COptimizer.Core.Model;
 using COptimizer.Core.Safety;
 using COptimizer.Core.Scanning;
@@ -15,30 +16,35 @@ public sealed class CleanEngine
     private readonly SafetyPolicy _policy;
     private readonly IRecycleBin? _recycleBin;
     private readonly TimeProvider _time;
+    private readonly IServiceManager? _services;
 
-    public CleanEngine(CleanupContext context, IRecycleBin? recycleBin, TimeProvider? time = null)
+    public CleanEngine(CleanupContext context, IRecycleBin? recycleBin, TimeProvider? time = null, IServiceManager? services = null)
     {
         _policy = context.Policy;
         _recycleBin = recycleBin;
         _time = time ?? TimeProvider.System;
+        _services = services;
     }
 
     public Task<CleanReport> CleanAsync(
         IReadOnlyList<RuleScanResult> plan,
         CleanOptions options,
         IProgress<CleanProgress>? progress = null,
+        ICleanLog? log = null,
         CancellationToken cancellationToken = default) =>
-        Task.Run(() => Clean(plan, options, progress, cancellationToken), cancellationToken);
+        Task.Run(() => Clean(plan, options, progress, log, cancellationToken), cancellationToken);
 
     public CleanReport Clean(
         IReadOnlyList<RuleScanResult> plan,
         CleanOptions options,
         IProgress<CleanProgress>? progress = null,
+        ICleanLog? log = null,
         CancellationToken cancellationToken = default)
     {
         var report = new CleanReport { DryRun = options.DryRun, StartedAt = _time.GetUtcNow() };
         var totalFiles = plan.Sum(r => (long)r.FileCount);
         long processed = 0;
+        var fileLog = options.DryRun ? null : log;
 
         foreach (var ruleResult in plan)
         {
@@ -49,6 +55,15 @@ public sealed class CleanEngine
             var ruleReport = new RuleCleanReport { RuleId = rule.Id, RuleName = rule.Name };
             report.Rules.Add(ruleReport);
 
+            // Services that hold the files (e.g. Windows Update) are stopped for the rule and restarted afterwards.
+            using var stopped = rule.StopServices.Count > 0 && !options.DryRun && ruleResult.FileCount > 0
+                ? _services?.StopTemporarily(rule.StopServices, cancellationToken)
+                : null;
+            if (stopped is not null)
+                ruleReport.Notes.AddRange(stopped.Problems);
+            else if (rule.StopServices.Count > 0 && _services is null && !options.DryRun)
+                ruleReport.Notes.Add("Services were not stopped (no service manager); files in use are skipped.");
+
             foreach (var target in ruleResult.Targets)
             {
                 var verifiedDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -56,7 +71,19 @@ public sealed class CleanEngine
                 foreach (var file in target.Files)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    ProcessFile(file, target.Root, rule.DeleteMode, options.DryRun, ruleReport, verifiedDirs);
+
+                    var skipped = ProcessFile(file, target.Root, rule.DeleteMode, options.DryRun, verifiedDirs);
+                    if (skipped is null)
+                    {
+                        ruleReport.RemovedFiles++;
+                        ruleReport.RemovedBytes += file.Length;
+                        fileLog?.Removed(rule.Id, file.Path, file.Length);
+                    }
+                    else
+                    {
+                        ruleReport.Skipped.Add(skipped);
+                        fileLog?.Skipped(rule.Id, skipped);
+                    }
 
                     if (++processed % ProgressInterval == 0)
                         progress?.Report(new CleanProgress(processed, totalFiles, report.RemovedBytes, file.Path));
@@ -72,62 +99,36 @@ public sealed class CleanEngine
         return report;
     }
 
-    private void ProcessFile(
-        FoundFile file,
-        string root,
-        DeleteMode mode,
-        bool dryRun,
-        RuleCleanReport report,
-        HashSet<string> verifiedDirs)
+    /// <summary>Removes (or, in a dry run, validates) one file. Returns null on success, otherwise why it was skipped.</summary>
+    private SkippedFile? ProcessFile(FoundFile file, string root, DeleteMode mode, bool dryRun, HashSet<string> verifiedDirs)
     {
         var check = _policy.CheckItem(file.Path, root);
         if (!check.IsAllowed)
-        {
-            report.Skipped.Add(new SkippedFile(file.Path, file.Length, SkipReason.SafetyCheckFailed, check.Reason));
-            return;
-        }
+            return new SkippedFile(file.Path, file.Length, SkipReason.SafetyCheckFailed, check.Reason);
 
         if (!ParentChainIsReal(check.NormalizedPath, root, verifiedDirs))
-        {
-            report.Skipped.Add(new SkippedFile(file.Path, file.Length, SkipReason.SafetyCheckFailed,
-                "A folder on the way is a junction or symbolic link."));
-            return;
-        }
+            return new SkippedFile(file.Path, file.Length, SkipReason.SafetyCheckFailed, "A folder on the way is a junction or symbolic link.");
 
         FileInfo info;
         try
         {
             info = new FileInfo(check.NormalizedPath);
             if (!info.Exists)
-            {
-                report.Skipped.Add(new SkippedFile(file.Path, file.Length, SkipReason.Missing));
-                return;
-            }
+                return new SkippedFile(file.Path, file.Length, SkipReason.Missing);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            report.Skipped.Add(new SkippedFile(file.Path, file.Length, SkipReason.InUseOrAccessDenied, e.Message));
-            return;
+            return new SkippedFile(file.Path, file.Length, SkipReason.InUseOrAccessDenied, e.Message);
         }
 
         if (info.Attributes.HasFlag(FileAttributes.ReparsePoint))
-        {
-            report.Skipped.Add(new SkippedFile(file.Path, file.Length, SkipReason.SafetyCheckFailed, "File is a reparse point."));
-            return;
-        }
+            return new SkippedFile(file.Path, file.Length, SkipReason.SafetyCheckFailed, "File is a reparse point.");
 
         if (info.Length != file.Length || info.LastWriteTimeUtc != file.LastWriteTimeUtc)
-        {
-            report.Skipped.Add(new SkippedFile(file.Path, file.Length, SkipReason.ChangedSinceScan));
-            return;
-        }
+            return new SkippedFile(file.Path, file.Length, SkipReason.ChangedSinceScan);
 
         if (dryRun)
-        {
-            report.RemovedFiles++;
-            report.RemovedBytes += file.Length;
-            return;
-        }
+            return null;
 
         try
         {
@@ -143,12 +144,11 @@ public sealed class CleanEngine
                 info.Delete();
             }
 
-            report.RemovedFiles++;
-            report.RemovedBytes += file.Length;
+            return null;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            report.Skipped.Add(new SkippedFile(file.Path, file.Length, SkipReason.InUseOrAccessDenied, e.Message));
+            return new SkippedFile(file.Path, file.Length, SkipReason.InUseOrAccessDenied, e.Message);
         }
     }
 

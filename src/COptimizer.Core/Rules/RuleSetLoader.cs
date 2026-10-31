@@ -73,6 +73,8 @@ public static class RuleSetLoader
             yield return $"{id}: at least one target is required.";
         if (rule.MinAgeHours < 0)
             yield return $"{id}: minAgeHours must not be negative.";
+        if (rule.StopServices.Any(string.IsNullOrWhiteSpace))
+            yield return $"{id}: stopServices contains an empty name.";
 
         foreach (var target in rule.Targets)
         {

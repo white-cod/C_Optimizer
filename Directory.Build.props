@@ -7,6 +7,8 @@
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <Company>C_Optimizer</Company>
     <Product>C_Optimizer</Product>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
+    <!-- Symbols inside the assemblies: the portable build is a single .exe file. -->
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 </Project>

@@ -94,6 +94,16 @@
       ]
     },
     {
+      "id": "windows-update.downloads",
+      "name": "Windows Update download cache",
+      "description": "Update packages that were already downloaded. Windows Update services are stopped while cleaning and started again. Skipped while an update waits for a restart.",
+      "category": "WindowsUpdate",
+      "risk": "Safe",
+      "stopServices": [ "wuauserv", "bits" ],
+      "skipWhenRebootPending": true,
+      "targets": [ { "path": "%WINDIR%\\SoftwareDistribution\\Download" } ]
+    },
+    {
       "id": "system.windows-logs",
       "name": "Old Windows log files",
       "description": "Setup, servicing and diagnostic logs older than 7 days.",

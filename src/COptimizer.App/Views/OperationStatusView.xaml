@@ -1,0 +1,89 @@
+<UserControl
+    x:Class="COptimizer.App.Views.OperationStatusView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:COptimizer.App.ViewModels"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=vm:CleanupViewModel}">
+    <!-- Progress of the current scan/cleanup and the result of the last cleanup. DataContext: CleanupViewModel. -->
+    <StackPanel>
+        <ui:Card Margin="0,0,0,12" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        Margin="0,0,0,8"
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        Text="{Binding ProgressText}"
+                        TextTrimming="CharacterEllipsis" />
+                    <ProgressBar
+                        Height="4"
+                        IsIndeterminate="{Binding IsProgressIndeterminate}"
+                        Maximum="100"
+                        Value="{Binding ProgressValue, Mode=OneWay}" />
+                </StackPanel>
+                <ui:Button
+                    Grid.Column="1"
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel" />
+            </Grid>
+        </ui:Card>
+
+        <!-- Slow system checks running in the background -->
+        <ui:Card Margin="0,0,0,12" Padding="16,10" Visibility="{Binding IsAnalyzingSystem, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <ui:ProgressRing Width="18" Height="18" IsIndeterminate="True" />
+                <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" Text="{Binding AnalysisText}" />
+            </StackPanel>
+        </ui:Card>
+
+        <ui:Card Margin="0,0,0,12" Visibility="{Binding LastCleanSummary, Converter={StaticResource NullToCollapsed}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:SymbolIcon VerticalAlignment="Center" FontSize="28">
+                    <ui:SymbolIcon.Style>
+                        <Style TargetType="ui:SymbolIcon">
+                            <Setter Property="Symbol" Value="CheckmarkCircle24" />
+                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding LastCleanSummary.IsSuccess}" Value="False">
+                                    <Setter Property="Symbol" Value="Warning24" />
+                                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:SymbolIcon.Style>
+                </ui:SymbolIcon>
+                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding LastCleanSummary.Title}" />
+                    <TextBlock Style="{StaticResource SecondaryText}" Text="{Binding LastCleanSummary.Message}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                    <ui:Button
+                        Command="{Binding OpenLogCommand}"
+                        Content="Open log"
+                        Icon="{ui:SymbolIcon Document24}"
+                        Visibility="{Binding LastCleanSummary.HasLog, Converter={StaticResource BoolToVisibility}}" />
+                    <ui:Button
+                        Margin="8,0,0,0"
+                        Appearance="Transparent"
+                        Command="{Binding DismissSummaryCommand}"
+                        Icon="{ui:SymbolIcon Dismiss24}"
+                        ToolTip="Dismiss" />
+                </StackPanel>
+            </Grid>
+        </ui:Card>
+    </StackPanel>
+</UserControl>

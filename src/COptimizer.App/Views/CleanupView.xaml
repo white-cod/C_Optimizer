@@ -1,0 +1,232 @@
+<UserControl
+    x:Class="COptimizer.App.Views.CleanupView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:COptimizer.App.ViewModels"
+    xmlns:views="clr-namespace:COptimizer.App.Views"
+    x:Name="Root"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=vm:CleanupViewModel}">
+
+    <UserControl.Resources>
+        <Style x:Key="RiskBadge" TargetType="Border" BasedOn="{StaticResource BadgeBorder}">
+            <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Risk}" Value="Moderate">
+                    <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Risk}" Value="Expert">
+                    <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RiskText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Risk}" Value="Moderate">
+                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Risk}" Value="Expert">
+                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel Margin="24,20,24,0">
+        <!-- Header -->
+        <Grid Margin="0,0,0,16" DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource PageTitle}" Text="Cleanup" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" Text="Select:" />
+                <ui:Button Appearance="Transparent" Command="{Binding SelectRecommendedCommand}" Content="Recommended" />
+                <ui:Button Appearance="Transparent" Command="{Binding SelectAllCommand}" Content="All" />
+                <ui:Button Appearance="Transparent" Command="{Binding SelectNoneCommand}" Content="None" />
+                <ui:Button
+                    Margin="12,0,0,0"
+                    Command="{Binding ScanCommand}"
+                    Content="Scan again"
+                    Icon="{ui:SymbolIcon ArrowSync24}" />
+            </StackPanel>
+        </Grid>
+
+        <views:OperationStatusView DockPanel.Dock="Top" />
+
+        <!-- Footer with the selection and the Clean button -->
+        <Border
+            Margin="-24,0,-24,0"
+            Padding="24,12"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0"
+            DockPanel.Dock="Bottom">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock VerticalAlignment="Center" FontSize="15" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding SelectedText}" />
+                <ui:Button
+                    Grid.Column="1"
+                    MinWidth="160"
+                    Appearance="Primary"
+                    Command="{Binding CleanCommand}"
+                    Content="Clean"
+                    Icon="{ui:SymbolIcon Broom24}" />
+            </Grid>
+        </Border>
+
+        <Grid>
+            <!-- Empty state -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Visibility="{Binding HasNothingToClean, Converter={StaticResource BoolToVisibility}}">
+                <ui:SymbolIcon HorizontalAlignment="Center" FontSize="48" Symbol="CheckmarkCircle24" />
+                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" Style="{StaticResource SectionTitle}" Text="Nothing to clean" />
+            </StackPanel>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl Margin="0,0,16,16" ItemsSource="{Binding Groups}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:CategoryGroupViewModel}">
+                            <StackPanel Margin="0,0,0,20">
+                                <!-- Category header -->
+                                <Grid Margin="4,0,8,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsSelected}" ToolTip="Select the whole category" />
+                                    <ui:SymbolIcon Grid.Column="1" Margin="4,0,10,0" VerticalAlignment="Center" FontSize="20" Symbol="{Binding Icon}" />
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource SectionTitle}" Text="{Binding Title}" />
+                                    <TextBlock Grid.Column="3" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" Text="{Binding SizeText}" />
+                                </Grid>
+
+                                <!-- Items -->
+                                <ItemsControl ItemsSource="{Binding Items}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:CleanupItemViewModel}">
+                                            <ui:CardExpander Margin="0,0,0,4" ContentPadding="16,8,16,12">
+                                                <ui:CardExpander.Header>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="110" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsSelected}" />
+                                                        <StackPanel Grid.Column="1" Margin="4,0,12,0" VerticalAlignment="Center">
+                                                            <TextBlock FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" />
+                                                            <TextBlock FontSize="12" Style="{StaticResource SecondaryText}" Text="{Binding Description}" />
+                                                        </StackPanel>
+                                                        <Border Grid.Column="2" Style="{StaticResource RiskBadge}">
+                                                            <TextBlock Style="{StaticResource RiskText}" Text="{Binding RiskText}" />
+                                                        </Border>
+                                                        <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                                            <TextBlock
+                                                                HorizontalAlignment="Right"
+                                                                FontSize="14"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                Text="{Binding SizeText}" />
+                                                            <TextBlock HorizontalAlignment="Right" FontSize="12" Style="{StaticResource SecondaryText}" Text="{Binding DetailText}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </ui:CardExpander.Header>
+
+                                                <StackPanel>
+                                                    <StackPanel
+                                                        Margin="0,0,0,8"
+                                                        Orientation="Horizontal"
+                                                        Visibility="{Binding HasRunningProcesses, Converter={StaticResource BoolToVisibility}}">
+                                                        <ui:SymbolIcon Foreground="{DynamicResource SystemFillColorCautionBrush}" Symbol="Warning24" />
+                                                        <TextBlock
+                                                            Margin="8,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                                                            Text="{Binding RunningProcessesText}" />
+                                                    </StackPanel>
+
+                                                    <ItemsControl ItemsSource="{Binding Notes}" Visibility="{Binding HasNotes, Converter={StaticResource BoolToVisibility}}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <StackPanel Margin="0,2" Orientation="Horizontal">
+                                                                    <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Info24" />
+                                                                    <TextBlock VerticalAlignment="Center" Style="{StaticResource SecondaryText}" Text="{Binding}" />
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <ItemsControl ItemsSource="{Binding Targets}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate DataType="{x:Type vm:TargetItemViewModel}">
+                                                                <Grid Margin="0,2">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <StackPanel VerticalAlignment="Center">
+                                                                        <TextBlock
+                                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                            Text="{Binding Path}"
+                                                                            TextTrimming="CharacterEllipsis"
+                                                                            ToolTip="{Binding Path}" />
+                                                                        <TextBlock FontSize="12" Style="{StaticResource SecondaryText}" Text="{Binding Details}" />
+                                                                    </StackPanel>
+                                                                    <TextBlock
+                                                                        Grid.Column="1"
+                                                                        Margin="12,0"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                        Text="{Binding SizeText}" />
+                                                                    <ui:Button
+                                                                        Grid.Column="2"
+                                                                        Appearance="Transparent"
+                                                                        Command="{Binding DataContext.OpenFolderCommand, ElementName=Root}"
+                                                                        CommandParameter="{Binding Path}"
+                                                                        Icon="{ui:SymbolIcon FolderOpen24}"
+                                                                        ToolTip="Open in Explorer" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <Expander
+                                                        Margin="0,8,0,0"
+                                                        Header="Notes and warnings"
+                                                        Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVisibility}}">
+                                                        <ItemsControl ItemsSource="{Binding Warnings}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <TextBlock Margin="0,1" FontSize="12" Style="{StaticResource SecondaryText}" Text="{Binding}" />
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </Expander>
+                                                </StackPanel>
+                                            </ui:CardExpander>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
+</UserControl>

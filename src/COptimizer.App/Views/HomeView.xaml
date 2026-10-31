@@ -1,0 +1,123 @@
+<UserControl
+    x:Class="COptimizer.App.Views.HomeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:COptimizer.App.ViewModels"
+    xmlns:views="clr-namespace:COptimizer.App.Views"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=vm:HomeViewModel}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,24">
+            <TextBlock Margin="0,0,0,16" Style="{StaticResource PageTitle}" Text="Free up space" />
+
+            <!-- Disk usage -->
+            <ui:Card Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:SymbolIcon VerticalAlignment="Center" FontSize="36" Symbol="Storage24" />
+                    <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding DriveTitle}" />
+                        <ProgressBar Height="8" Margin="0,8" Maximum="100" Value="{Binding UsedPercent, Mode=OneWay}">
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar" BasedOn="{StaticResource {x:Type ProgressBar}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLowOnSpace}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
+                        <TextBlock Style="{StaticResource SecondaryText}" Text="{Binding FreeText}" />
+                    </StackPanel>
+                    <ui:Button
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Appearance="Transparent"
+                        Command="{Binding RefreshDiskCommand}"
+                        Icon="{ui:SymbolIcon ArrowSync24}"
+                        ToolTip="Refresh" />
+                </Grid>
+            </ui:Card>
+
+            <views:OperationStatusView DataContext="{Binding Cleanup}" />
+
+            <!-- Scan summary -->
+            <ui:Card Margin="0,0,0,20" Visibility="{Binding Cleanup.HasScanned, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="40"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                            Text="{Binding Cleanup.RecommendedText}" />
+                        <TextBlock FontSize="15" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="can be freed safely" />
+                        <TextBlock Margin="0,6,0,0" Style="{StaticResource SecondaryText}">
+                            <Run Text="{Binding Cleanup.TotalText, Mode=OneWay}" />
+                            <Run Text="found in total, including items with side effects that you can review." />
+                        </TextBlock>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <ui:Button
+                            MinWidth="200"
+                            Appearance="Primary"
+                            Command="{Binding Cleanup.CleanRecommendedCommand}"
+                            Content="Clean recommended"
+                            Icon="{ui:SymbolIcon Broom24}" />
+                        <ui:Button
+                            MinWidth="200"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding ShowCleanupCommand}"
+                            Content="Review details"
+                            Icon="{ui:SymbolIcon List24}" />
+                        <ui:Button
+                            MinWidth="200"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            Appearance="Transparent"
+                            Command="{Binding Cleanup.ScanCommand}"
+                            Content="Scan again"
+                            Icon="{ui:SymbolIcon ArrowSync24}" />
+                    </StackPanel>
+                </Grid>
+            </ui:Card>
+
+            <!-- Categories -->
+            <TextBlock
+                Margin="0,0,0,8"
+                Style="{StaticResource SectionTitle}"
+                Text="What was found"
+                Visibility="{Binding Cleanup.HasScanned, Converter={StaticResource BoolToVisibility}}" />
+            <ItemsControl ItemsSource="{Binding Cleanup.Groups}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:CategoryGroupViewModel}">
+                        <ui:Card Width="210" Margin="0,0,8,8">
+                            <StackPanel>
+                                <ui:SymbolIcon HorizontalAlignment="Left" FontSize="24" Symbol="{Binding Icon}" />
+                                <TextBlock Margin="0,8,0,2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Title}" />
+                                <TextBlock FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding SizeText}" />
+                            </StackPanel>
+                        </ui:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,11 +1,13 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/COptimizer.App/COptimizer.App.csproj" />
     <Project Path="src/COptimizer.Cli/COptimizer.Cli.csproj" />
     <Project Path="src/COptimizer.Core/COptimizer.Core.csproj" />
     <Project Path="src/COptimizer.Rules/COptimizer.Rules.csproj" />
     <Project Path="src/COptimizer.Windows/COptimizer.Windows.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/COptimizer.App.Tests/COptimizer.App.Tests.csproj" />
     <Project Path="tests/COptimizer.Core.Tests/COptimizer.Core.Tests.csproj" />
   </Folder>
 </Solution>
